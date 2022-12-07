@@ -3,13 +3,13 @@
 Bidirectional DSHOT and RPM Filter implementation, for stm32F40X
 Probably you can easily adapt it to your MCU.
 
-## DSHOT/BDSHOT
+## BDSHOT
 
-DShot and BDShot implementation based on: [great description](https://brushlesswhoop.com/dshot-and-bidirectional-dshot/) and [betaflight code](https://github.com/betaflight/betaflight/tree/master/src/main/drivers).
+BDShot implementation based on: [great description](https://brushlesswhoop.com/dshot-and-bidirectional-dshot/) and [betaflight code](https://github.com/betaflight/betaflight/tree/master/src/main/drivers).
 
 Theoretically code is correct for all DShot modes (300 600 1200). However, it was tested with [BlueJey](https://github.com/mathiasvr/bluejay) ESC software which handle maximally DShot600.
 
-For DShot and BDShot bitbanging (manually changing GPIOs values) implemented. There are two options of bitbanging.
+For BDShot bitbanging (manually changing GPIOs values) was implemented. There are two options of bitbanging. Of course this method works with standard DShot as well.
 
 Version 1:
 
