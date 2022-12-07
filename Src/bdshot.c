@@ -198,7 +198,7 @@ void update_motors()
 
 #if defined(BIT_BANGING_V1)
 
-void preset_bb_Dshot_buffers()
+void preset_bb_BDshot_buffers()
 {
     // these values are constant so they should be set once in the setup routine:
     for (uint16_t i = 0; i < DSHOT_BB_BUFFER_LENGTH * DSHOT_BB_FRAME_SECTIONS; i++)
@@ -275,7 +275,7 @@ static void fill_bb_BDshot_buffer(uint16_t m1_value, uint16_t m2_value, uint16_t
 }
 #elif defined(BIT_BANGING_V2)
 
-void preset_bb_Dshot_buffers()
+void preset_bb_BDshot_buffers()
 {
 
     // this values are constant so they can be set once in the setup rutine:

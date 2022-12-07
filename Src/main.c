@@ -13,7 +13,7 @@ int main()
 
     setup();
     setup_NVIC();
-    preset_bb_Dshot_buffers();
+    preset_bb_BDshot_buffers();
     RPM_filter_init(&rpm_filter_gyro, FREQUENCY_OF_SAMPLING_HZ);
 
     while (1)

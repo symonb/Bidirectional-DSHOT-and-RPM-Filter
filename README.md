@@ -9,7 +9,7 @@ BDShot implementation based on: [great description](https://brushlesswhoop.com/d
 
 Theoretically code is correct for all DShot modes (300 600 1200). However, it was tested with [BlueJey](https://github.com/mathiasvr/bluejay) ESC software which handle maximally DShot600.
 
-For BDShot bitbanging (manually changing GPIOs values) was implemented. There are two options of bitbanging. Of course this method works with standard DShot as well.
+For BDShot bitbanging (manually changing GPIOs values) was implemented. There are two options of bitbanging.
 
 Version 1:
 
@@ -25,6 +25,8 @@ Version 2:
 - For each bit there is only 3 sections, so buffers are much smaller than in version 1.
 - However this method uses 3 CCR for each timer (probably not a big deal).
 - It works for transferring but for reception it's not useful.
+
+Of course above methods would work with standard DShot as well (you would need to change checksum calculation and invert the signal).
 
 Tested in flight but for small scale, use with caution!
 
