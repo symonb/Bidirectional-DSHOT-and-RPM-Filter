@@ -10,20 +10,21 @@ DShot and BDShot implementation based on: [great description](https://brushlessw
 Theoretically code is correct for all DShot modes (300 600 1200). However, it was tested with [BlueJey](https://github.com/mathiasvr/bluejay) ESC software which handle maximally DShot600.
 
 For DShot and BDShot bitbanging (manually changing GPIOs values) implemented. There are two options of bitbanging.
+
 Version 1:
 
-    Every bit frame is divided in sections and for each section DMA request is generated.
-    After specified sections (at beginning, after 0-bit time and after 1-bit time) to GPIO register can be sent value to set 1 or to set 0.
-    For rest of the sections 0x0 is sent, so GPIOs don't change values.
-    It uses only 1 CCR on each timer.
-    Idea for reception is the same (oversampling ESC response)
+Every bit frame is divided in sections and for each section DMA request is generated.
+After specified sections (at beginning, after 0-bit time and after 1-bit time) to GPIO register can be sent value to set 1 or to set 0.
+For rest of the sections 0x0 is sent, so GPIOs don't change values.
+It uses only 1 CCR on each timer.
+Idea for reception is the same (oversampling ESC response)
 
 Version 2:
 
-    DMA requests generated only at beginning, after 0-bit time and after 1-bit time.
-    For each bit there is only 3 sections -> buffers are much smaller than in version 1.
-    However this method uses 3 CCR for each timer (probably not a big deal).
-    It works for transferring but for reception it's not useful.
+DMA requests generated only at beginning, after 0-bit time and after 1-bit time.
+For each bit there is only 3 sections -> buffers are much smaller than in version 1.
+However this method uses 3 CCR for each timer (probably not a big deal).
+It works for transferring but for reception it's not useful.
 
 Tested in flight but for small scale, use with caution!
 

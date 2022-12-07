@@ -10,7 +10,7 @@
 #include <stdbool.h>
 
 //------------ESC_PROTOCOLS----------
-#define BIT_BANGING_V2
+#define BIT_BANGING_V1
 #define DSHOT_MODE 300 // 150 300 600 1200
 
 #define DSHOT_BUFFER_LENGTH 18 // 16 bits of Dshot and 2 for clearing
@@ -37,7 +37,7 @@
 #define BDSHOT_RESPONSE_BITRATE (DSHOT_MODE * 4 / 3) // in my tests this value was not 5/4 * DSHOT_MODE as documentation suggests
 #define BDSHOT_RESPONSE_OVERSAMPLING 3               // it has to be a factor of (DSHOT_BB_FRAME_LENGTH * DSHOT_MODE / BDSHOT_RESPONSE_BITRATE)
 
-//----------MOTORS---------
+//-------------------MOTORS--------------------
 #define MOTORS_COUNT 4        // how many motors are used
 #define MOTOR_1 3             // PA3
 #define MOTOR_2 0             // PB0

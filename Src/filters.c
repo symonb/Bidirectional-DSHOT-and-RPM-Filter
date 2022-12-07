@@ -103,14 +103,14 @@ static void biquad_filter_update(biquad_Filter_t *filter, biquad_Filter_type fil
 
 float biquad_filter_apply_DF1(biquad_Filter_t *filter, float input)
 {
-	/* compute result */
+	// compute result:
 	const float result = filter->b0 * input + filter->b1 * filter->x1 + filter->b2 * filter->x2 - filter->a1 * filter->y1 - filter->a2 * filter->y2;
 
-	/* shift x1 to x2, input to x1 */
+	// shift x1 to x2, input to x1:
 	filter->x2 = filter->x1;
 	filter->x1 = input;
 
-	/* shift y1 to y2, result to y1 */
+	// shift y1 to y2, result to y1:
 	filter->y2 = filter->y1;
 	filter->y1 = result;
 
