@@ -128,6 +128,7 @@ float biquad_filter_apply_DF2(biquad_Filter_t *filter, float input)
 
 	return result;
 }
+
 static void biquad_filter_copy_coefficients(biquad_Filter_t *copy_from_filter, biquad_Filter_t *copy_to_filter)
 {
 

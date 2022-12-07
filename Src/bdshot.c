@@ -3,13 +3,15 @@
 #include "global_variables.h"
 #include "bdshot.h"
 
-static uint16_t calculate_Dshot_checksum(uint16_t value);
-static uint16_t prepare_Dshot_package(uint16_t value);
-static void fill_bb_Dshot_buffer(uint16_t m1_value, uint16_t m2_value, uint16_t m3_value, uint16_t m4_value);
-static bool BDshot_check_checksum(uint16_t value);
+static void fill_bb_BDshot_buffer(uint16_t m1_value, uint16_t m2_value, uint16_t m3_value, uint16_t m4_value);
+static void update_motors_rpm();
 static uint32_t get_BDshot_response(uint32_t raw_buffer[], const uint8_t motor_shift);
 static void read_BDshot_response(uint32_t value, uint8_t motor);
+static bool BDshot_check_checksum(uint16_t value);
+static uint16_t prepare_BDshot_package(uint16_t value);
+static uint16_t calculate_BDshot_checksum(uint16_t value);
 
+// flags for reception or transmission:
 static bool bdshot_reception_1 = true;
 static bool bdshot_reception_2 = true;
 
@@ -35,7 +37,8 @@ void DMA2_Stream6_IRQHandler(void)
             DMA2_Stream6->CR &= ~(DMA_SxCR_DIR);
             DMA2_Stream6->PAR = (uint32_t)(&(GPIOA->IDR));
             DMA2_Stream6->M0AR = (uint32_t)(dshot_bb_buffer_1_4_r);
-            // Main idea - after sending DShot frame to ESC start receiving GPIO values.
+            // Main idea:
+            // After sending DShot frame to ESC start receiving GPIO values.
             // Capture data (probing longer than ESC response).
             // There is ~33 [us] gap before the response so it is necessary to add more samples:
             DMA2_Stream6->NDTR = ((int)(33 * BDSHOT_RESPONSE_BITRATE / 1000 + BDSHOT_RESPONSE_LENGTH + 1) * BDSHOT_RESPONSE_OVERSAMPLING);
@@ -80,7 +83,8 @@ void DMA2_Stream2_IRQHandler(void)
             DMA2_Stream2->CR &= ~(DMA_SxCR_DIR);
             DMA2_Stream2->PAR = (uint32_t)(&(GPIOB->IDR));
             DMA2_Stream2->M0AR = (uint32_t)(dshot_bb_buffer_2_3_r);
-            // Main idea - after sending DShot frame to ESC start receiving GPIO values.
+            // Main idea:
+            // After sending DShot frame to ESC start receiving GPIO values.
             // Capture data (probing longer than ESC response).
             // There is ~33 [us] gap before the response so it is necessary to add more samples:
             DMA2_Stream2->NDTR = ((int)(33 * BDSHOT_RESPONSE_BITRATE / 1000 + BDSHOT_RESPONSE_LENGTH + 1) * BDSHOT_RESPONSE_OVERSAMPLING);
@@ -109,12 +113,10 @@ void update_motors()
     // prepare for sending:
     update_motors_rpm();
 
-    fill_bb_Dshot_buffer(prepare_Dshot_package(*motor_1_value_pointer),
-                         prepare_Dshot_package(*motor_2_value_pointer),
-                         prepare_Dshot_package(*motor_3_value_pointer),
-                         prepare_Dshot_package(*motor_4_value_pointer));
-
-    NVIC_DisableIRQ(EXTI0_IRQn);
+    fill_bb_BDshot_buffer(prepare_BDshot_package(*motor_1_value_pointer),
+                          prepare_BDshot_package(*motor_2_value_pointer),
+                          prepare_BDshot_package(*motor_3_value_pointer),
+                          prepare_BDshot_package(*motor_4_value_pointer));
 
     bdshot_reception_1 = true;
     bdshot_reception_2 = true;
@@ -194,25 +196,6 @@ void update_motors()
 #endif
 }
 
-uint16_t calculate_Dshot_checksum(uint16_t value)
-{
-    // 12th bit for telemetry on/off (1/0):
-    value = value << 1;
-
-    return (~(value ^ (value >> 4) ^ (value >> 8))) & 0x0F;
-}
-
-uint16_t prepare_Dshot_package(uint16_t value)
-{
-    // value is in range of 2000-4000 so I need to transform it into Dshot range (48-2047)
-    value -= 1953;
-    if (value > 0 && value < 48)
-    {
-        value = 48;
-    }
-    return ((value << 5) | calculate_Dshot_checksum(value));
-}
-
 #if defined(BIT_BANGING_V1)
 
 void preset_bb_Dshot_buffers()
@@ -237,8 +220,8 @@ void preset_bb_Dshot_buffers()
     }
 }
 
-static void fill_bb_Dshot_buffer(uint16_t m1_value, uint16_t m2_value, uint16_t m3_value,
-                                 uint16_t m4_value)
+static void fill_bb_BDshot_buffer(uint16_t m1_value, uint16_t m2_value, uint16_t m3_value,
+                                  uint16_t m4_value)
 {
     // For each bite DMA is transfering DSHOT_BB_FRAME_SECTION times data into GPIO register. But we need to decide only about 3 values (begining, 0-bit time, 1-bit time).
     // For Rest values we send 0x0 into register so GPIOs stay the same.
@@ -315,8 +298,8 @@ void preset_bb_Dshot_buffers()
     }
 }
 
-static void fill_bb_Dshot_buffer(uint16_t m1_value, uint16_t m2_value, uint16_t m3_value,
-                                 uint16_t m4_value)
+static void fill_bb_BDshot_buffer(uint16_t m1_value, uint16_t m2_value, uint16_t m3_value,
+                                  uint16_t m4_value)
 {
     // each bite frame is divided in sections where slope can vary:
     for (uint8_t i = 0; i < (DSHOT_BB_BUFFER_LENGTH - 2); i++) // last 2 bits are always high (logic 0)
@@ -365,20 +348,7 @@ static void fill_bb_Dshot_buffer(uint16_t m1_value, uint16_t m2_value, uint16_t 
 }
 #endif
 
-bool BDshot_check_checksum(uint16_t value)
-{
-    // BDshot frame has 4 last bits CRC:
-    if (((value ^ (value >> 4) ^ (value >> 8) ^ (value >> 12)) & 0x0F) == 0x0F)
-    {
-        return true;
-    }
-    else
-    {
-        return false;
-    }
-}
-
-void update_motors_rpm()
+static void update_motors_rpm()
 {
     // BDshot bit banging reads whole GPIO register.
     // Now it's time to create BDshot responses from all motors (made of individual bits).
@@ -484,4 +454,36 @@ static void read_BDshot_response(uint32_t value, uint8_t motor)
     {
         motors_error[motor - 1] = 0.9 * motors_error[motor - 1] + 10; // increase motor error
     }
+}
+
+static bool BDshot_check_checksum(uint16_t value)
+{
+    // BDshot frame has 4 last bits CRC:
+    if (((value ^ (value >> 4) ^ (value >> 8) ^ (value >> 12)) & 0x0F) == 0x0F)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+static uint16_t prepare_BDshot_package(uint16_t value)
+{
+    // value is in range of 2000-4000 so I need to transform it into Dshot range (48-2047)
+    value -= 1953;
+    if (value > 0 && value < 48)
+    {
+        value = 48;
+    }
+    return ((value << 5) | calculate_BDshot_checksum(value));
+}
+
+static uint16_t calculate_BDshot_checksum(uint16_t value)
+{
+    // 12th bit for telemetry on/off (1/0):
+    value = value << 1;
+
+    return (~(value ^ (value >> 4) ^ (value >> 8))) & 0x0F;
 }
