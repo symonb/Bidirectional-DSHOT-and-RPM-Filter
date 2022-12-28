@@ -72,7 +72,7 @@ static void biquad_filter_update(biquad_Filter_t *filter, biquad_Filter_type fil
 	case BIQUAD_LPF:
 
 		filter->b0 = (1 - cs) * 0.5f;
-		filter->b1 = filter->b0 * 2;
+		filter->b1 = 1 - cs;
 		filter->b2 = filter->b0;
 		filter->a1 = -2 * cs;
 		filter->a2 = 1 - alpha;
@@ -182,11 +182,17 @@ static void RPM_filter_update(RPM_filter_t *filter)
 					biquad_filter_copy_coefficients(&(filter->notch_filters[0][motor][harmonic]), &(filter->notch_filters[2][motor][harmonic]));
 
 					// fade out if reaching minimal frequency:
-					if (motors_rpm[motor] < (RPM_MIN_FREQUENCY_HZ + RPM_FADE_RANGE_HZ) * sec_in_min)
+					if (frequency < (RPM_MIN_FREQUENCY_HZ + RPM_FADE_RANGE_HZ))
 					{
-						filter->weight[0][motor][harmonic] = (motors_rpm[motor] - RPM_MIN_FREQUENCY_HZ * sec_in_min) / (RPM_FADE_RANGE_HZ * sec_in_min);
+						filter->weight[0][motor][harmonic] = (float)(frequency - RPM_MIN_FREQUENCY_HZ) / (RPM_FADE_RANGE_HZ);
 						filter->weight[1][motor][harmonic] = filter->weight[0][motor][harmonic];
 						filter->weight[2][motor][harmonic] = filter->weight[0][motor][harmonic];
+					}
+					else
+					{
+						filter->weight[0][motor][harmonic] = 1;
+						filter->weight[1][motor][harmonic] = 1;
+						filter->weight[2][motor][harmonic] = 1;
 					}
 				}
 				else
