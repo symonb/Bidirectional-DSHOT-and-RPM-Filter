@@ -71,8 +71,8 @@ static void biquad_filter_update(biquad_Filter_t *filter, biquad_Filter_type fil
 	{
 	case BIQUAD_LPF:
 
-		filter->b0 = filter->b1 * 0.5f;
-		filter->b1 = 1 - cs;
+		filter->b0 = (1 - cs) * 0.5f;
+		filter->b1 = filter->b0 * 2;
 		filter->b2 = filter->b0;
 		filter->a1 = -2 * cs;
 		filter->a2 = 1 - alpha;
@@ -178,8 +178,8 @@ static void RPM_filter_update(RPM_filter_t *filter)
 				{
 					// each axis has the same noises from motors, so compute it once and next copy values:
 					biquad_filter_update(&(filter->notch_filters[0][motor][harmonic]), BIQUAD_NOTCH, frequency, filter->q_factor, FREQUENCY_OF_SAMPLING_HZ);
-					biquad_filter_copy_coefficients(&(filter->notch_filters[1][motor][harmonic]), &(filter->notch_filters[0][motor][harmonic]));
-					biquad_filter_copy_coefficients(&(filter->notch_filters[2][motor][harmonic]), &(filter->notch_filters[0][motor][harmonic]));
+					biquad_filter_copy_coefficients(&(filter->notch_filters[0][motor][harmonic]), &(filter->notch_filters[1][motor][harmonic]));
+					biquad_filter_copy_coefficients(&(filter->notch_filters[0][motor][harmonic]), &(filter->notch_filters[2][motor][harmonic]));
 
 					// fade out if reaching minimal frequency:
 					if (motors_rpm[motor] < (RPM_MIN_FREQUENCY_HZ + RPM_FADE_RANGE_HZ) * sec_in_min)
