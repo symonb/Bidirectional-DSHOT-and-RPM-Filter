@@ -9,7 +9,7 @@ BDShot implementation based on: [great description](https://brushlesswhoop.com/d
 
 Theoretically code is correct for all DShot modes (300 600 1200). However, it was tested with [BlueJey](https://github.com/mathiasvr/bluejay) ESC software which handle maximally DShot600.
 
-For BDShot bitbanging (manually changing GPIOs values) was implemented. There are two options of bitbanging.
+For BDShot bitbanging (manually changing GPIOs values) was implemented. There are two options of bitbanging. Tests are required to decide which is more reliable.
 
 Version 1:
 
@@ -37,6 +37,6 @@ For each axis (X, Y, Z) there are created notch filters that remove motors frequ
 Overall there are 3x4x3 notch filters (3 axes, 4 motors, 3 harmonics).
 Since we know the exact rpm - notches are narrow (Q = 500).
 
-Notches are designed as biquad filters based on this [description](http://shepazu.github.io/Audio-EQ-Cookbook/audio-eq-cookbook.html) and betaflight code. For each iteration new coefficients of the notches are computed and updated for all axes.
+Notches are designed as biquad filters based on this [description](http://shepazu.github.io/Audio-EQ-Cookbook/audio-eq-cookbook.html) and betaflight code. For each iteration new coefficients of the notches are computed and updated.
 
-Not tested in flight yet
+Tested in flight but only for low PID frequency. More test required but at least it doesn't crash your drone :).
