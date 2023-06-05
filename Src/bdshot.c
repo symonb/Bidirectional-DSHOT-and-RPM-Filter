@@ -128,12 +128,12 @@ void update_motors()
     GPIOA->MODER |= GPIO_MODER_MODER3_0;
 
     DMA2_Stream6->CR |= DMA_SxCR_DIR_0;
-    DMA2_Stream6->PAR = (uint32_t)(&(GPIOA->BSRRL));
+    DMA2_Stream6->PAR = (uint32_t)(&(GPIOA->BSRR));
     DMA2_Stream6->M0AR = (uint32_t)(dshot_bb_buffer_1_4);
     DMA2_Stream6->NDTR = DSHOT_BB_BUFFER_LENGTH * DSHOT_BB_FRAME_SECTIONS;
 
     DMA2_Stream2->CR |= DMA_SxCR_DIR_0;
-    DMA2_Stream2->PAR = (uint32_t)(&(GPIOB->BSRRL));
+    DMA2_Stream2->PAR = (uint32_t)(&(GPIOB->BSRR));
     DMA2_Stream2->M0AR = (uint32_t)(dshot_bb_buffer_2_3);
     DMA2_Stream2->NDTR = DSHOT_BB_BUFFER_LENGTH * DSHOT_BB_FRAME_SECTIONS;
 
@@ -393,7 +393,7 @@ static uint32_t get_BDshot_response(uint32_t raw_buffer[], const uint8_t motor_s
             // then look for changes in bits values and compute BDSHOT bits:
             if ((raw_buffer[i] & (1 << motor_shift)) != previous_value)
             {
-                const uint8_t len = MAX((i - previous_i) / BDSHOT_RESPONSE_OVERSAMPLING, 1); // how many bits had the same value
+                const uint8_t len = (i - previous_i) / BDSHOT_RESPONSE_OVERSAMPLING > 1 ? (i - previous_i) / BDSHOT_RESPONSE_OVERSAMPLING : 1; // how many bits had the same value
                 bits += len;
                 motor_response <<= len;
                 if (previous_value != 0)

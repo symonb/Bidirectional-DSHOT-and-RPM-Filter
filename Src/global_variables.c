@@ -9,12 +9,6 @@
 #include "global_constants.h"
 #include "global_variables.h"
 
-// motor's values set by PID's:
-uint16_t motor_1_value;
-uint16_t motor_2_value;
-uint16_t motor_3_value;
-uint16_t motor_4_value;
-
 //	motor's RPM values (from BDshot)
 uint32_t motors_rpm[MOTORS_COUNT];
 

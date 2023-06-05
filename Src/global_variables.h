@@ -11,11 +11,6 @@
 #include "stdint.h"
 #include "stdbool.h"
 
-extern uint16_t motor_1_value;
-extern uint16_t motor_2_value;
-extern uint16_t motor_3_value;
-extern uint16_t motor_4_value;
-
 extern uint32_t motors_rpm[];
 
 extern float motors_error[];

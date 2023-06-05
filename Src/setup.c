@@ -1,9 +1,3 @@
-/*
- * setup.c
- *
- *  Created on: 04.07.2021
- *      Author: symon
- */
 
 #include "stm32f4xx.h"
 #include "global_constants.h"
@@ -17,6 +11,7 @@
  */
 
 static void setup_HSE();
+static void setup_PLL();
 static void setup_GPIOA();	// GPIOA (pin 2 - motor; pin 3 - motor)
 static void setup_GPIOB();	// GPIOB (pin 0 - motor; pin 1 - motor)
 static void setup_BDshot(); // Bidirectional DShot
@@ -24,11 +19,13 @@ static void setup_DMA();
 
 void setup()
 {
+	// basic configuration:
 	setup_HSE();
+	setup_PLL();
+	// BDshot specific setup:
 	setup_GPIOA();
 	setup_GPIOB();
 	setup_BDshot();
-	preset_bb_Dshot_buffers();
 	setup_DMA();
 }
 
@@ -53,6 +50,67 @@ static void setup_HSE()
 
 	// enable power interface clock
 	RCC->APB1ENR |= RCC_APB1ENR_PWREN;
+}
+
+static void setup_PLL()
+{
+
+	/* (1) Test if PLL is used as System clock */
+	/* (2) Select HSI as system clock */
+	/* (3) Wait for HSI switched */
+	/* (4) Disable the PLL */
+	/* (5) Wait until PLLRDY is cleared */
+	/* (6) Configure flash */
+	/* (7) Set HSE as PLL source */
+	/* (8) Set the PLLM to 4, PLLN to 168, PLLP to 2, PLLQ to 7 */
+	/* PLL_freq = PLL_clock_in / PLLM * PLLN / PLLP
+	 * PLL_48 =PLL_clock_in / PLLM * PLLN / PLLQ = 48 [MHz]
+	 * Important:
+	 * 2 <= PLLM <= 64;
+	 * 50 <= PLLN <= 432;
+	 * PLLP = {2,4,6,8}
+	 * 2 <= PLLQ <= 15
+	 * In addition:
+	 * 	1  [MHz] <= PLL_clock_in / PLLM 		 	  <=  2  [MHz] but 2 [MHz] is preferred
+	 * 100 [MHz] <= PLL_clock_in / PLLM * PLLN 		  <= 432 [MHz]
+	 *  			PLL_clock_in / PLLM * PLLN / PLLP <= 168 [MHz]
+	 * So as I want receive max. freq. 168 [MHz] PLLP has to be 2 (VCO_out 336 [MHz]), PLLN = 168 and PLLM is 4 since 8 [MHz]/PLLM = 2 [MHz]
+	 * Also PLL_48 has to be 48 [MHz] so PLLQ = 7 -> 336 [MHz] / 48 [MHz] = 7
+	 * */
+	/* (9) Enable the PLL */
+	/* (10) Wait until PLLRDY is set */
+	/* (11) Select PLL as system clock */
+	/* (12) Wait until the PLL is switched on */
+	if ((RCC->CFGR & RCC_CFGR_SWS) == RCC_CFGR_SWS_PLL) /* (1) */
+	{
+		RCC->CFGR = (RCC->CFGR & (uint32_t)(~RCC_CFGR_SW)) | RCC_CFGR_SW_HSI; /* (2) */
+		while ((RCC->CFGR & RCC_CFGR_SWS) != RCC_CFGR_SWS_HSI)				  /* (3) */
+		{
+			/* For robust implementation, add here time-out management */
+		}
+	}
+	RCC->CR &= (uint32_t)(~RCC_CR_PLLON);  /* (4) */
+	while ((RCC->CR & RCC_CR_PLLRDY) != 0) /* (5) */
+	{
+		/* For robust implementation, add here time-out management */
+	}
+
+	FLASH->ACR |= FLASH_ACR_LATENCY_5WS; /* (6) */
+
+	RCC->PLLCFGR |= RCC_PLLCFGR_PLLSRC_HSE; /* (7) */
+
+	RCC->PLLCFGR = (RCC->PLLCFGR & (~(RCC_PLLCFGR_PLLM | RCC_PLLCFGR_PLLN | RCC_PLLCFGR_PLLP | RCC_PLLCFGR_PLLQ))) | (RCC_PLLCFGR_PLLM_2 | RCC_PLLCFGR_PLLN_3 | RCC_PLLCFGR_PLLN_5 | RCC_PLLCFGR_PLLN_7 | RCC_PLLCFGR_PLLQ_0 | RCC_PLLCFGR_PLLQ_1 | RCC_PLLCFGR_PLLQ_2); /* (8) */
+
+	RCC->CR |= RCC_CR_PLLON;			   /* (9) */
+	while ((RCC->CR & RCC_CR_PLLRDY) == 0) /* (10) */
+	{
+		/* For robust implementation, add here time-out management */
+	}
+	RCC->CFGR |= (uint32_t)(RCC_CFGR_SW_PLL);			   /* (11) */
+	while ((RCC->CFGR & RCC_CFGR_SWS) != RCC_CFGR_SWS_PLL) /* (12) */
+	{
+		/* For robust implementation, add here time-out management */
+	}
 }
 
 static void setup_GPIOA()
@@ -83,7 +141,7 @@ static void setup_GPIOB()
 
 static void setup_BDshot()
 {
-	//	TIM1 - only for generating time base, all outputs are set by GPIOs:
+	//	TIM1 - only for generating time basement all outputs are set by GPIOs:
 
 	// enable TIM1 clock:
 
@@ -93,7 +151,7 @@ static void setup_BDshot()
 	TIM1->CR1 = 0x0;
 	TIM1->CR1 |= TIM_CR1_ARPE | TIM_CR1_URS;
 
-// DMA request:
+	// DMA request:
 #if defined(BIT_BANGING_V1)
 	TIM1->DIER |= TIM_DIER_CC1DE; // channel 1 request
 
@@ -121,7 +179,7 @@ static void setup_BDshot()
 	TIM1->EGR |= TIM_EGR_UG;
 	TIM1->CR1 |= TIM_CR1_CEN;
 
-	//	TIM8 - only for generating time base, all outputs are set by GPIOs:
+	//	TIM8 - only for generating time basement all outputs are set by GPIOs:
 
 	// enable TIM8 clock:
 
@@ -131,7 +189,7 @@ static void setup_BDshot()
 	TIM8->CR1 = 0x0;
 	TIM8->CR1 |= TIM_CR1_ARPE | TIM_CR1_URS;
 
-// DMA request:
+	// DMA request:
 #if defined(BIT_BANGING_V1)
 	TIM8->DIER |= TIM_DIER_CC1DE; // channel 1 request
 

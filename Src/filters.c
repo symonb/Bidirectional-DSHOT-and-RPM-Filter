@@ -12,7 +12,6 @@
 
 static void biquad_filter_update(biquad_Filter_t *filter, biquad_Filter_type filter_type, float filter_frequency_Hz, float quality_factor, uint16_t sampling_frequency_Hz);
 static void biquad_filter_copy_coefficients(biquad_Filter_t *copy_from_filter, biquad_Filter_t *copy_to_filter);
-static void RPM_filter_update(RPM_filter_t *filter);
 
 void biquad_filter_init(biquad_Filter_t *filter, biquad_Filter_type filter_type, float filter_frequency_Hz, float quality_factor, uint16_t sampling_frequency_Hz)
 {
@@ -161,7 +160,7 @@ void RPM_filter_init(RPM_filter_t *filter, uint16_t sampling_frequency_Hz)
 	}
 }
 
-static void RPM_filter_update(RPM_filter_t *filter)
+void RPM_filter_update(RPM_filter_t *filter)
 {
 	const uint8_t sec_in_min = 60; // for conversion from Hz to rpm
 	float frequency;			   // frequency for filtering

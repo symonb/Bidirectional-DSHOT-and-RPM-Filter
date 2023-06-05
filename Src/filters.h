@@ -59,5 +59,6 @@ float biquad_filter_apply_DF2(biquad_Filter_t *filter, float input);
 
 void RPM_filter_init(RPM_filter_t *filter, uint16_t sampling_frequency_Hz);
 float RPM_filter_apply(RPM_filter_t *filter, uint8_t axis, float input);
+void RPM_filter_update(RPM_filter_t *filter);
 
 #endif /* FILTERS_H_ */
